@@ -1,0 +1,880 @@
+{
+  "name": "Terminumfrage (organisationsübergreifend)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Terminumfrage über Organisationsgrenzen\n\nWenn Leute aus **verschiedenen Organisationen** einen Termin brauchen, kann niemand in alle Kalender schauen. Darum fragt dieser Workflow die Termine per **n8n-Formular** ab.\n\n**Bahn 1:** Tabelle anlegen und Einladungen vorbereiten (Versand erst, wenn du ihn einschaltest).\n**Bahn 2:** Das Formular sammelt die Antworten in einer **Data Table**.\n**Bahn 3:** Die Auswertung zählt die Zusagen je Termin. Gezählt wird in Knoten, nicht von einer KI.\n\n**Reihenfolge beim Testen:** zuerst Bahn 1 ausführen, dann das Formular (Bahn 2) zwei oder drei Mal ausfüllen, dann Bahn 3.\n\nAlle Namen und Adressen sind erfunden.\n\n**Auf der gemeinsamen Bootcamp-n8n:** Ersetze **überall** `kuerzel` durch dein eigenes Kürzel, sonst schreibt dein Formular in die Tabelle einer anderen Person oder die Auswertung zählt fremde Antworten. Am einfachsten vor dem Import in der JSON-Datei (oder bitte Claude darum). Im Editor sind es diese Stellen:\n- Tabellenname `terminumfrage_kuerzel` in *Tabelle anlegen (einmalig)*, *Alte Antwort dieser Person löschen*, *Antwort speichern (Data Table)* und *Antworten laden*\n- Umfrage-ID `kuerzel-herbst-2026` in *Umfrage-Daten (Beispiel)*, *Alte Antwort dieser Person löschen*, *Antwort übernehmen*, *Antworten laden* und *Ergebnis*\n- Formular-Pfad `terminumfrage-kuerzel` in *Formular: Terminumfrage* (Option Path) und im Feld `formular_link` in *Umfrage-Daten (Beispiel)*",
+        "height": 620,
+        "width": 760,
+        "color": 4
+      },
+      "id": "7e5a0000-0000-4000-8000-000000000001",
+      "name": "Doku: Überblick",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -820
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Bahn 1: Umfrage vorbereiten\nLegt die Tabelle an (falls es sie schon gibt, wird sie wiederverwendet), baut pro Person eine Einladung. In **Umfrage-Daten** stehen Titel, Termine und Teilnehmende. `mail_versenden` steht auf **false**: dann siehst du nur die Vorschau.",
+        "height": 140,
+        "width": 1560,
+        "color": 7
+      },
+      "id": "7e5a0000-0000-4000-8000-000000000002",
+      "name": "Doku: Bahn 1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -170
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "7e5a0000-0000-4000-8000-00000000000a",
+      "name": "Start: Umfrage vorbereiten",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "table",
+        "operation": "create",
+        "tableName": "terminumfrage_kuerzel",
+        "columns": {
+          "column": [
+            {
+              "name": "umfrage_id",
+              "type": "string"
+            },
+            {
+              "name": "name",
+              "type": "string"
+            },
+            {
+              "name": "organisation",
+              "type": "string"
+            },
+            {
+              "name": "mailadresse",
+              "type": "string"
+            },
+            {
+              "name": "termin",
+              "type": "string"
+            },
+            {
+              "name": "anmerkung",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {
+          "createIfNotExists": true
+        }
+      },
+      "id": "7e5a0000-0000-4000-8000-00000000000b",
+      "name": "Tabelle anlegen (einmalig)",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "umfrage_id",
+              "value": "kuerzel-herbst-2026",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "titel",
+              "value": "Abstimmung Herbstkampagne Wanderregion",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "termine",
+              "value": "={{ [\"A: Di 06.10.2026, 10:00 bis 11:00 Uhr\", \"B: Mi 07.10.2026, 14:00 bis 15:00 Uhr\", \"C: Do 08.10.2026, 09:00 bis 10:00 Uhr\"] }}",
+              "type": "array"
+            },
+            {
+              "id": "a4",
+              "name": "teilnehmende",
+              "value": "={{ [{\"name\": \"Anna Beispiel\", \"organisation\": \"TVB Beispieltal\", \"email\": \"anna@example.org\"}, {\"name\": \"Ben Muster\", \"organisation\": \"Kulturhaus Beispielstadt\", \"email\": \"ben@example.org\"}, {\"name\": \"Clara Test\", \"organisation\": \"Region Beispielsee\", \"email\": \"clara@example.org\"}] }}",
+              "type": "array"
+            },
+            {
+              "id": "a5",
+              "name": "formular_link",
+              "value": "https://n8n-oew.buildbar.at/form/terminumfrage-kuerzel",
+              "type": "string"
+            },
+            {
+              "id": "a6",
+              "name": "absender",
+              "value": "Dein Name <deine-adresse@example.org>",
+              "type": "string"
+            },
+            {
+              "id": "a7",
+              "name": "mail_versenden",
+              "value": false,
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7e5a0000-0000-4000-8000-00000000000c",
+      "name": "Umfrage-Daten (Beispiel)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "teilnehmende",
+        "include": "noOtherFields",
+        "options": {}
+      },
+      "id": "7e5a0000-0000-4000-8000-00000000000d",
+      "name": "Pro Person ein Eintrag",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        660,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "an",
+              "value": "={{ $json.email }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "betreff",
+              "value": "=Terminumfrage: {{ $('Umfrage-Daten (Beispiel)').first().json.titel }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "text",
+              "value": "=Hallo {{ $json.name }},\n\nwir suchen einen Termin für „{{ $('Umfrage-Daten (Beispiel)').first().json.titel }}“. Bitte kreuze im Formular alle Termine an, die für dich passen:\n\n{{ $('Umfrage-Daten (Beispiel)').first().json.termine.join('\\n') }}\n\nZum Formular: {{ $('Umfrage-Daten (Beispiel)').first().json.formular_link }}\n\nDanke und liebe Grüße",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7e5a0000-0000-4000-8000-00000000000e",
+      "name": "Einladung formulieren",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c15",
+              "leftValue": "={{ $('Umfrage-Daten (Beispiel)').first().json.mail_versenden }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "7e5a0000-0000-4000-8000-00000000000f",
+      "name": "Mail wirklich senden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1100,
+        20
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "email",
+        "operation": "send",
+        "fromEmail": "={{ $('Umfrage-Daten (Beispiel)').first().json.absender }}",
+        "toEmail": "={{ $json.an }}",
+        "subject": "={{ $json.betreff }}",
+        "emailFormat": "text",
+        "text": "={{ $json.text }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "7e5a0000-0000-4000-8000-000000000010",
+      "name": "Einladung senden (SMTP)",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 2.1,
+      "position": [
+        1340,
+        -80
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "7e5a0000-0000-4000-8000-000000000011",
+      "name": "Nur Vorschau (kein Versand)",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1340,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "content": "**Versand einschalten:** In *Umfrage-Daten (Beispiel)* `mail_versenden` auf true setzen und `absender` anpassen (dort steht noch der Platzhalter `deine-adresse@example.org`). Dann im Knoten *Einladung senden (SMTP)* eine SMTP-Credential wählen.\n\nAuf der gemeinsamen Bootcamp-n8n sehen alle alle Zugangsdaten: nur ein Test-Postfach verwenden, nie dein dienstliches Passwort.\n\nMicrosoft 365 oder Gmail brauchen eigene Zugänge, siehe Skill `m365-google-freigaben`.",
+        "height": 300,
+        "width": 340,
+        "color": 6
+      },
+      "id": "7e5a0000-0000-4000-8000-000000000003",
+      "name": "Doku: Versand",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Bahn 2: Antworten sammeln\nÖffne das Formular über **Execute workflow** (Test-URL). Wer das Formular ein zweites Mal ausfüllt, ersetzt seine alte Antwort: Erst werden alte Zeilen dieser Mailadresse gelöscht, dann pro angekreuztem Termin eine Zeile gespeichert.",
+        "height": 140,
+        "width": 1560,
+        "color": 7
+      },
+      "id": "7e5a0000-0000-4000-8000-000000000004",
+      "name": "Doku: Bahn 2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Terminumfrage: Abstimmung Herbstkampagne",
+        "formDescription": "Bitte kreuze alle Termine an, die für dich passen. Deine Angaben werden nur für diese Terminfindung verwendet.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Name",
+              "fieldName": "Name",
+              "fieldType": "text",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Organisation",
+              "fieldName": "Organisation",
+              "fieldType": "text",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Mailadresse",
+              "fieldName": "Mailadresse",
+              "fieldType": "email",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Termine",
+              "fieldName": "Termine",
+              "fieldType": "checkbox",
+              "fieldOptions": {
+                "values": [
+                  {
+                    "option": "A: Di 06.10.2026, 10:00 bis 11:00 Uhr"
+                  },
+                  {
+                    "option": "B: Mi 07.10.2026, 14:00 bis 15:00 Uhr"
+                  },
+                  {
+                    "option": "C: Do 08.10.2026, 09:00 bis 10:00 Uhr"
+                  }
+                ]
+              },
+              "limitSelection": "unlimited",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Anmerkung",
+              "fieldName": "Anmerkung",
+              "fieldType": "textarea",
+              "requiredField": false
+            }
+          ]
+        },
+        "responseMode": "onReceived",
+        "options": {
+          "path": "terminumfrage-kuerzel",
+          "buttonLabel": "Antwort senden",
+          "appendAttribution": false,
+          "respondWithOptions": {
+            "values": {
+              "respondWith": "text",
+              "formSubmittedText": "Danke, deine Antwort ist gespeichert."
+            }
+          }
+        }
+      },
+      "id": "7e5a0000-0000-4000-8000-000000000014",
+      "name": "Formular: Terminumfrage",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.5,
+      "position": [
+        0,
+        460
+      ],
+      "webhookId": "7e5a0000-0000-4000-8000-00000000f001"
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "deleteRows",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "terminumfrage_kuerzel"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "umfrage_id",
+              "condition": "eq",
+              "keyValue": "kuerzel-herbst-2026"
+            },
+            {
+              "keyName": "mailadresse",
+              "condition": "eq",
+              "keyValue": "={{ $json.Mailadresse.trim().toLowerCase() }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7e5a0000-0000-4000-8000-000000000015",
+      "name": "Alte Antwort dieser Person löschen",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        240,
+        460
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "umfrage_id",
+              "value": "kuerzel-herbst-2026",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "name",
+              "value": "={{ $('Formular: Terminumfrage').first().json.Name.trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "organisation",
+              "value": "={{ $('Formular: Terminumfrage').first().json.Organisation.trim() }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "mailadresse",
+              "value": "={{ $('Formular: Terminumfrage').first().json.Mailadresse.trim().toLowerCase() }}",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "termine",
+              "value": "={{ $('Formular: Terminumfrage').first().json.Termine }}",
+              "type": "array"
+            },
+            {
+              "id": "a6",
+              "name": "anmerkung",
+              "value": "={{ $('Formular: Terminumfrage').first().json.Anmerkung ?? '' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7e5a0000-0000-4000-8000-000000000016",
+      "name": "Antwort übernehmen",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        480,
+        460
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "termine",
+        "include": "allOtherFields",
+        "options": {
+          "destinationFieldName": "termin"
+        }
+      },
+      "id": "7e5a0000-0000-4000-8000-000000000017",
+      "name": "Pro Termin eine Zeile",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        700,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "insert",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "terminumfrage_kuerzel"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "7e5a0000-0000-4000-8000-000000000018",
+      "name": "Antwort speichern (Data Table)",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        920,
+        460
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Bahn 3: Auswerten\nLädt alle Antworten dieser Umfrage, zählt die Zusagen je Termin und sortiert. Das Ergebnis steht im letzten Knoten: bester Termin, Anzahl Zusagen, Gleichstand ja oder nein. Termine ohne eine einzige Zusage tauchen nicht auf.",
+        "height": 140,
+        "width": 1560,
+        "color": 7
+      },
+      "id": "7e5a0000-0000-4000-8000-000000000005",
+      "name": "Doku: Bahn 3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        700
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "7e5a0000-0000-4000-8000-00000000001e",
+      "name": "Start: Auswertung",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "row",
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "mode": "name",
+          "value": "terminumfrage_kuerzel"
+        },
+        "matchType": "allConditions",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "umfrage_id",
+              "condition": "eq",
+              "keyValue": "kuerzel-herbst-2026"
+            }
+          ]
+        },
+        "returnAll": true
+      },
+      "id": "7e5a0000-0000-4000-8000-00000000001f",
+      "name": "Antworten laden",
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1.1,
+      "position": [
+        220,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "count",
+              "field": "mailadresse"
+            },
+            {
+              "aggregation": "concatenate",
+              "field": "name",
+              "separateBy": ", "
+            }
+          ]
+        },
+        "fieldsToSplitBy": "termin",
+        "options": {}
+      },
+      "id": "7e5a0000-0000-4000-8000-000000000020",
+      "name": "Zusagen je Termin zählen",
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1.1,
+      "position": [
+        440,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "type": "simple",
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "count_mailadresse",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7e5a0000-0000-4000-8000-000000000021",
+      "name": "Nach Zusagen sortieren",
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        660,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "termine",
+        "include": "allFields",
+        "options": {}
+      },
+      "id": "7e5a0000-0000-4000-8000-000000000022",
+      "name": "Alle Termine zusammenfassen",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        880,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "umfrage_id",
+              "value": "kuerzel-herbst-2026",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "antworten_gesamt",
+              "value": "={{ new Set($('Antworten laden').all().map(i => i.json.mailadresse)).size }}",
+              "type": "number"
+            },
+            {
+              "id": "a3",
+              "name": "bester_termin",
+              "value": "={{ $json.termine[0].termin }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "zusagen_bester_termin",
+              "value": "={{ $json.termine[0].count_mailadresse }}",
+              "type": "number"
+            },
+            {
+              "id": "a5",
+              "name": "gleichstand",
+              "value": "={{ $json.termine.length > 1 && $json.termine[1].count_mailadresse === $json.termine[0].count_mailadresse }}",
+              "type": "boolean"
+            },
+            {
+              "id": "a6",
+              "name": "uebersicht",
+              "value": "={{ $json.termine.map(t => t.termin + ': ' + t.count_mailadresse + ' Zusage(n) (' + t.concatenated_name + ')').join('\\n') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "7e5a0000-0000-4000-8000-000000000023",
+      "name": "Ergebnis",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1100,
+        900
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Kalender abfragen? Nur innerhalb einer Organisation\nFreie Zeiten aus Kalendern lesen geht nur, wenn alle im **selben** Google-Workspace oder Microsoft-365-Tenant sind:\n- Google Calendar Knoten, Operation **Availability** (prüft ein Zeitfenster in einem Kalender, auf den dein Zugang Zugriff hat)\n- Microsoft Graph **findMeetingTimes** per HTTP Request (braucht Kalenderrechte und meist eine Admin-Freigabe)\n\nFür Leute aus anderen Organisationen bleibt die Formular-Umfrage der verlässliche Weg.",
+        "height": 300,
+        "width": 420,
+        "color": 5
+      },
+      "id": "7e5a0000-0000-4000-8000-000000000006",
+      "name": "Doku: Kalender",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1560,
+        460
+      ]
+    }
+  ],
+  "connections": {
+    "Start: Umfrage vorbereiten": {
+      "main": [
+        [
+          {
+            "node": "Tabelle anlegen (einmalig)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tabelle anlegen (einmalig)": {
+      "main": [
+        [
+          {
+            "node": "Umfrage-Daten (Beispiel)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Umfrage-Daten (Beispiel)": {
+      "main": [
+        [
+          {
+            "node": "Pro Person ein Eintrag",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pro Person ein Eintrag": {
+      "main": [
+        [
+          {
+            "node": "Einladung formulieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Einladung formulieren": {
+      "main": [
+        [
+          {
+            "node": "Mail wirklich senden?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mail wirklich senden?": {
+      "main": [
+        [
+          {
+            "node": "Einladung senden (SMTP)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Nur Vorschau (kein Versand)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formular: Terminumfrage": {
+      "main": [
+        [
+          {
+            "node": "Alte Antwort dieser Person löschen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alte Antwort dieser Person löschen": {
+      "main": [
+        [
+          {
+            "node": "Antwort übernehmen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Antwort übernehmen": {
+      "main": [
+        [
+          {
+            "node": "Pro Termin eine Zeile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Pro Termin eine Zeile": {
+      "main": [
+        [
+          {
+            "node": "Antwort speichern (Data Table)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start: Auswertung": {
+      "main": [
+        [
+          {
+            "node": "Antworten laden",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Antworten laden": {
+      "main": [
+        [
+          {
+            "node": "Zusagen je Termin zählen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Zusagen je Termin zählen": {
+      "main": [
+        [
+          {
+            "node": "Nach Zusagen sortieren",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Nach Zusagen sortieren": {
+      "main": [
+        [
+          {
+            "node": "Alle Termine zusammenfassen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alle Termine zusammenfassen": {
+      "main": [
+        [
+          {
+            "node": "Ergebnis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Vienna"
+  }
+}

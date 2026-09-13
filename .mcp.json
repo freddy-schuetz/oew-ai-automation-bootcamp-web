@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "n8n-mcp": {
+      "type": "http",
+      "url": "https://hub-oew.buildbar.at/g/HIER-TRAEGT-DER-HUB-DEINEN-TOKEN-EIN/mcp"
+    }
+  }
+}

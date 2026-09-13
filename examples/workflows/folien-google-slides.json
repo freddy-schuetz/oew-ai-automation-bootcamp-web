@@ -1,0 +1,653 @@
+{
+  "name": "Folien aus Google-Slides-Vorlage",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Folien aus einer Vorlage füllen\n\nDu baust die Präsentation **einmal** in Google Slides und schreibst Platzhalter wie `[[TITEL]]` oder `[[NAECHTIGUNGEN]]` hinein. Der Workflow **kopiert** die Vorlage, **ersetzt** die Platzhalter mit fertig berechneten Werten und lädt die Kopie als **PDF** herunter.\n\nOhne Google-Zugang (Standard, `google_aktiv` = false) entsteht stattdessen ein **HTML-Handout**, das du im Browser als PDF drucken kannst.\n\nn8n hat keinen PowerPoint-Knoten. Eine .pptx bekommst du über den Export im Download-Knoten (Format PowerPoint statt PDF) oder über einen eigenen kleinen Dienst, siehe Skill `praesentation`.\n\nAlle Zahlen sind erfundene Beispieldaten.",
+        "height": 330,
+        "width": 640,
+        "color": 4
+      },
+      "id": "51de0000-0000-4000-8000-000000000001",
+      "name": "Doku: Überblick",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -60,
+        -560
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "51de0000-0000-4000-8000-00000000000a",
+      "name": "Start (Manuell)",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "google_aktiv",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "a2",
+              "name": "vorlage_id",
+              "value": "HIER-ID-DEINER-SLIDES-VORLAGE",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "51de0000-0000-4000-8000-00000000000b",
+      "name": "Einstellungen",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "region",
+              "value": "Beispielregion Bergsee",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "zeitraum",
+              "value": "Sommer 2026",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "naechtigungen_aktuell",
+              "value": 412300,
+              "type": "number"
+            },
+            {
+              "id": "a4",
+              "name": "naechtigungen_vorjahr",
+              "value": 398750,
+              "type": "number"
+            },
+            {
+              "id": "a5",
+              "name": "kampagne_klicks",
+              "value": 18420,
+              "type": "number"
+            },
+            {
+              "id": "a6",
+              "name": "kampagne_impressionen",
+              "value": 612000,
+              "type": "number"
+            },
+            {
+              "id": "a7",
+              "name": "quelle",
+              "value": "Erfundene Beispieldaten (Bootcamp)",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "all",
+        "options": {}
+      },
+      "id": "51de0000-0000-4000-8000-00000000000c",
+      "name": "Kennzahlen (Beispieldaten)",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        440,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Werte fertig machen\nHier wird **gerechnet und formatiert**: Veränderung in Prozent, Klickrate, Tausenderpunkte, Datum. In die Folie kommt nur fertiger Text. Die Kernaussage entsteht aus einer festen Regel, nicht aus einer KI.",
+        "height": 170,
+        "width": 360,
+        "color": 6
+      },
+      "id": "51de0000-0000-4000-8000-000000000002",
+      "name": "Doku: Werte",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        600,
+        -200
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "p_titel",
+              "value": "={{ 'Saisonbericht ' + $json.zeitraum }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "p_region",
+              "value": "={{ $json.region }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "p_naechtigungen",
+              "value": "={{ $json.naechtigungen_aktuell.toLocaleString('de-DE') }}",
+              "type": "string"
+            },
+            {
+              "id": "a4",
+              "name": "p_veraenderung",
+              "value": "={{ $json.naechtigungen_vorjahr ? ((($json.naechtigungen_aktuell - $json.naechtigungen_vorjahr) / $json.naechtigungen_vorjahr * 100 >= 0 ? '+' : '') + (($json.naechtigungen_aktuell - $json.naechtigungen_vorjahr) / $json.naechtigungen_vorjahr * 100).toFixed(1).replace('.', ',') + ' %') : 'kein Vorjahreswert' }}",
+              "type": "string"
+            },
+            {
+              "id": "a5",
+              "name": "p_klicks",
+              "value": "={{ $json.kampagne_klicks.toLocaleString('de-DE') }}",
+              "type": "string"
+            },
+            {
+              "id": "a6",
+              "name": "p_klickrate",
+              "value": "={{ ($json.kampagne_klicks / $json.kampagne_impressionen * 100).toFixed(2).replace('.', ',') + ' %' }}",
+              "type": "string"
+            },
+            {
+              "id": "a7",
+              "name": "p_kernaussage",
+              "value": "={{ !$json.naechtigungen_vorjahr ? 'Kein Vorjahresvergleich möglich.' : ($json.naechtigungen_aktuell >= $json.naechtigungen_vorjahr ? 'Mehr Nächtigungen als im Vorjahr.' : 'Weniger Nächtigungen als im Vorjahr.') }}",
+              "type": "string"
+            },
+            {
+              "id": "a8",
+              "name": "p_quelle",
+              "value": "={{ $json.quelle }}",
+              "type": "string"
+            },
+            {
+              "id": "a9",
+              "name": "p_stand",
+              "value": "={{ $now.setZone('Europe/Vienna').toFormat('dd.MM.yyyy') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "all",
+        "options": {}
+      },
+      "id": "51de0000-0000-4000-8000-00000000000d",
+      "name": "Platzhalter-Werte berechnen",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        660,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c14",
+              "leftValue": "={{ $json.google_aktiv }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "51de0000-0000-4000-8000-00000000000e",
+      "name": "Google-Zugang eingerichtet?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        880,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Mit Google (braucht Zugang)\n1. Vorlage in Google Slides anlegen, ID aus der Adresse kopieren (`/presentation/d/ID/edit`) und in *Einstellungen* eintragen.\n2. Google-Credentials für Drive und Slides anlegen (Skill `m365-google-freigaben`).\n3. `google_aktiv` auf true.\n\nPlatzhalter in der Vorlage **genau so schreiben** wie im Knoten *Platzhalter ersetzen* (Groß- und Kleinschreibung zählt). *Ersetzungen prüfen* zählt, ob jeder Platzhalter gefunden wurde. Fehlt einer, gibt es kein PDF, sondern im Knoten *Warnung: Platzhalter fehlt* die Liste der fehlenden Platzhalter und den Link zur Kopie.",
+        "height": 250,
+        "width": 1120,
+        "color": 5
+      },
+      "id": "51de0000-0000-4000-8000-000000000003",
+      "name": "Doku: Google",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        -480
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "operation": "copy",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $json.vorlage_id }}"
+        },
+        "name": "={{ $json.p_titel }} ({{ $json.p_stand }})",
+        "sameFolder": true,
+        "options": {}
+      },
+      "id": "51de0000-0000-4000-8000-00000000000f",
+      "name": "Vorlage kopieren (Google Drive)",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1120,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "presentation",
+        "operation": "replaceText",
+        "presentationId": "={{ $json.id }}",
+        "textUi": {
+          "textValues": [
+            {
+              "text": "[[TITEL]]",
+              "replaceText": "={{ $('Platzhalter-Werte berechnen').first().json.p_titel }}",
+              "matchCase": true
+            },
+            {
+              "text": "[[REGION]]",
+              "replaceText": "={{ $('Platzhalter-Werte berechnen').first().json.p_region }}",
+              "matchCase": true
+            },
+            {
+              "text": "[[NAECHTIGUNGEN]]",
+              "replaceText": "={{ $('Platzhalter-Werte berechnen').first().json.p_naechtigungen }}",
+              "matchCase": true
+            },
+            {
+              "text": "[[VERAENDERUNG]]",
+              "replaceText": "={{ $('Platzhalter-Werte berechnen').first().json.p_veraenderung }}",
+              "matchCase": true
+            },
+            {
+              "text": "[[KLICKS]]",
+              "replaceText": "={{ $('Platzhalter-Werte berechnen').first().json.p_klicks }}",
+              "matchCase": true
+            },
+            {
+              "text": "[[KLICKRATE]]",
+              "replaceText": "={{ $('Platzhalter-Werte berechnen').first().json.p_klickrate }}",
+              "matchCase": true
+            },
+            {
+              "text": "[[KERNAUSSAGE]]",
+              "replaceText": "={{ $('Platzhalter-Werte berechnen').first().json.p_kernaussage }}",
+              "matchCase": true
+            },
+            {
+              "text": "[[QUELLE]]",
+              "replaceText": "={{ $('Platzhalter-Werte berechnen').first().json.p_quelle }}",
+              "matchCase": true
+            },
+            {
+              "text": "[[STAND]]",
+              "replaceText": "={{ $('Platzhalter-Werte berechnen').first().json.p_stand }}",
+              "matchCase": true
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "51de0000-0000-4000-8000-000000000010",
+      "name": "Platzhalter ersetzen (Google Slides)",
+      "type": "n8n-nodes-base.googleSlides",
+      "typeVersion": 2,
+      "position": [
+        1340,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "fehlende_platzhalter",
+              "value": "={{ $('Platzhalter ersetzen (Google Slides)').params.textUi.textValues.map(eintrag => eintrag.text).filter((platzhalter, i) => !(($('Platzhalter ersetzen (Google Slides)').all().flatMap(item => item.json.replies ?? [item.json])[i]?.replaceAllText?.occurrencesChanged ?? 0) > 0)) }}",
+              "type": "array"
+            },
+            {
+              "id": "a2",
+              "name": "kopie_link",
+              "value": "={{ 'https://docs.google.com/presentation/d/' + $('Vorlage kopieren (Google Drive)').first().json.id + '/edit' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "51de0000-0000-4000-8000-000000000014",
+      "name": "Ersetzungen prüfen",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1560,
+        -100
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c15",
+              "leftValue": "={{ $json.fehlende_platzhalter }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "51de0000-0000-4000-8000-000000000015",
+      "name": "Alle Platzhalter gefunden?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1780,
+        -100
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "warnung",
+              "value": "={{ 'Diese Platzhalter stehen nicht (oder anders geschrieben) in der Vorlage: ' + $json.fehlende_platzhalter.join(', ') + '. Es wurde kein PDF erzeugt. Kopie zum Prüfen: ' + $json.kopie_link }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "include": "all",
+        "options": {}
+      },
+      "id": "51de0000-0000-4000-8000-000000000016",
+      "name": "Warnung: Platzhalter fehlt",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2000,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "resource": "file",
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Vorlage kopieren (Google Drive)').first().json.id }}"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "slidesToFormat": "application/pdf"
+            }
+          },
+          "binaryPropertyName": "pdf"
+        }
+      },
+      "id": "51de0000-0000-4000-8000-000000000011",
+      "name": "Als PDF herunterladen (Google Drive)",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        2000,
+        -180
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Ohne Google: HTML-Handout\nBaut eine schlichte HTML-Seite mit denselben Werten und macht daraus eine Datei. Im Knoten *HTML-Datei erzeugen* unter **Binary** herunterladen, im Browser öffnen, als PDF drucken. Titel, Region, Kernaussage und Quelle werden dabei maskiert (`&`, `<`, `>`), damit Werte wie „Berg & See“ die Seite nicht zerlegen.",
+        "height": 160,
+        "width": 700,
+        "color": 7
+      },
+      "id": "51de0000-0000-4000-8000-000000000004",
+      "name": "Doku: Handout",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1100,
+        260
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "html",
+              "value": "=<!DOCTYPE html>\n<html lang=\"de\">\n<head>\n<meta charset=\"utf-8\">\n<title>{{ String($json.p_titel ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}</title>\n<style>\nbody { font-family: Arial, sans-serif; margin: 40px; color: #1d2b36; }\nh1 { margin-bottom: 4px; }\n.region { color: #55636e; margin-top: 0; }\ntable { border-collapse: collapse; margin: 24px 0; }\ntd { border-bottom: 1px solid #d5dde3; padding: 8px 24px 8px 0; }\ntd.zahl { text-align: right; font-weight: bold; }\n.kern { font-size: 1.2em; }\n.quelle { color: #55636e; font-size: 0.9em; }\n@media print { body { margin: 15mm; } }\n</style>\n</head>\n<body>\n<h1>{{ String($json.p_titel ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}</h1>\n<p class=\"region\">{{ String($json.p_region ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}</p>\n<p class=\"kern\">{{ String($json.p_kernaussage ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}</p>\n<table>\n<tr><td>Nächtigungen</td><td class=\"zahl\">{{ $json.p_naechtigungen }}</td></tr>\n<tr><td>Veränderung zum Vorjahr</td><td class=\"zahl\">{{ $json.p_veraenderung }}</td></tr>\n<tr><td>Kampagnen-Klicks</td><td class=\"zahl\">{{ $json.p_klicks }}</td></tr>\n<tr><td>Klickrate</td><td class=\"zahl\">{{ $json.p_klickrate }}</td></tr>\n</table>\n<p class=\"quelle\">Quelle: {{ String($json.p_quelle ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}. Stand: {{ $json.p_stand }}.</p>\n</body>\n</html>",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "51de0000-0000-4000-8000-000000000012",
+      "name": "Handout als HTML",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1120,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "toText",
+        "sourceProperty": "html",
+        "binaryPropertyName": "handout",
+        "options": {
+          "fileName": "handout-saisonbericht.html",
+          "encoding": "utf8"
+        }
+      },
+      "id": "51de0000-0000-4000-8000-000000000013",
+      "name": "HTML-Datei erzeugen",
+      "type": "n8n-nodes-base.convertToFile",
+      "typeVersion": 1.1,
+      "position": [
+        1340,
+        100
+      ]
+    }
+  ],
+  "connections": {
+    "Start (Manuell)": {
+      "main": [
+        [
+          {
+            "node": "Einstellungen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Einstellungen": {
+      "main": [
+        [
+          {
+            "node": "Kennzahlen (Beispieldaten)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Kennzahlen (Beispieldaten)": {
+      "main": [
+        [
+          {
+            "node": "Platzhalter-Werte berechnen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Platzhalter-Werte berechnen": {
+      "main": [
+        [
+          {
+            "node": "Google-Zugang eingerichtet?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google-Zugang eingerichtet?": {
+      "main": [
+        [
+          {
+            "node": "Vorlage kopieren (Google Drive)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Handout als HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Vorlage kopieren (Google Drive)": {
+      "main": [
+        [
+          {
+            "node": "Platzhalter ersetzen (Google Slides)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Platzhalter ersetzen (Google Slides)": {
+      "main": [
+        [
+          {
+            "node": "Ersetzungen prüfen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Ersetzungen prüfen": {
+      "main": [
+        [
+          {
+            "node": "Alle Platzhalter gefunden?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alle Platzhalter gefunden?": {
+      "main": [
+        [
+          {
+            "node": "Als PDF herunterladen (Google Drive)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Warnung: Platzhalter fehlt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Handout als HTML": {
+      "main": [
+        [
+          {
+            "node": "HTML-Datei erzeugen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Vienna"
+  }
+}

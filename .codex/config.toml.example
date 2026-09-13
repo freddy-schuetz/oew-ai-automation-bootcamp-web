@@ -1,0 +1,18 @@
+# Codex MCP-Konfig für n8n-mcp.
+# Kopieren nach ~/.codex/config.toml (global) ODER als .codex/config.toml im Projekt
+# (Projekt-Scope funktioniert nur bei "trusted projects").
+# N8N_API_URL: zentrale Bootcamp-n8n (Adresse und API-Key im Zugangsbereich
+# https://buildbar.at/oew#zugang) oder deine eigene n8n mit API-Zugang.
+# Die kostenlose n8n-Cloud-Testversion hat keine öffentliche API und reicht nicht.
+# ⚠️ Die echte Datei NICHT committen (enthält deinen API-Key). Sie steht in .gitignore.
+
+[mcp_servers.n8n-mcp]
+command = "npx"
+args = ["-y", "n8n-mcp"]
+
+[mcp_servers.n8n-mcp.env]
+N8N_API_URL = "https://DEINE-N8N-ADRESSE"
+N8N_API_KEY = "DEIN_N8N_API_KEY"
+MCP_MODE = "stdio"
+LOG_LEVEL = "error"
+DISABLE_CONSOLE_OUTPUT = "true"
