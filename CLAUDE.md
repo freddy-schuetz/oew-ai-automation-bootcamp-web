@@ -79,6 +79,18 @@ In Claude Code Web gibt es **keine lokale Vorschau** (`npm run dev` bzw. `localh
 ### KI-Zugang
 Im Zugangsbereich liegt ein **Anthropic-API-Key mit Ausgabelimit**. Trag ihn in n8n als Credential mit dem Namen **„Anthropic"** ein (falls es sie in der n8n noch nicht gibt) und nutze sie in den KI-Nodes. Den Key **nie** in Workflow-Parameter, Code, Repo oder Chat-Frontend schreiben.
 
+## Google-Daten (DataForSEO)
+
+- Auf der zentralen Bootcamp-n8n liegt ein Credential **„DataForSEO“** (Typ *Basic Auth*). Damit lassen sich **Google-Einträge** abfragen: Öffnungszeiten, Adresse, Telefon, Bewertungen, Kategorien.
+- Verwendung: **HTTP Request**-Node auf `https://api.dataforseo.com/v3/business_data/google/my_business_info/live`, Methode POST, Authentifizierung *Predefined Credential Type* → *Basic Auth* → „DataForSEO“.
+- ⚠⚠ **Jede Abfrage kostet echtes Geld**, rund **0,005 USD je Betrieb**. Das ist der einzige Baustein im Bootcamp, bei dem das so ist. Deshalb:
+  - **Zuerst mit genau einem Betrieb testen**, nicht mit einer Liste.
+  - Vor einem Lauf über viele Betriebe kurz überschlagen: 100 Betriebe täglich sind rund 19 USD im Monat, stündlich sind es rund 400.
+  - Keine Schleife über eine ganze Tabelle bauen, ohne die Zeilenzahl vorher zu begrenzen.
+- **Land setzen.** Ohne `location_name` sucht der Dienst in Deutschland. Für Österreich `"location_name": "Austria"` mitgeben, besser zusätzlich `latitude`/`longitude`. Sonst trifft er bei gleichnamigen Hütten den falschen Betrieb — und meldet keinen Fehler.
+- Der Dienst **liest nur**. Ein Google-Eintrag lässt sich darüber nicht ändern; dafür bräuchte es die Google-Business-Profile-API und eine Rolle im jeweiligen Eintrag.
+
+
 ### Datenbank: nach Bedarf einbinden
 Für die meisten Fälle reichen **n8n Data Tables** (eingebaut, `n8n_manage_datatable`): nutze sie als **Default**. Darüber hinaus stehen Bausteine bereit. **Biete sie aktiv an, wenn das Vorhaben sie braucht**, dräng sie aber niemandem auf:
 

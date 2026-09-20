@@ -37,7 +37,9 @@ Alle Typen und Operationen mit n8n-mcp geprüft. Versionen wie im Beispiel-Workf
 4. `n8n-nodes-base.splitOut` (1): `fieldToSplitOut: teilnehmende`, `include: noOtherFields`
 5. `n8n-nodes-base.set` „Einladung formulieren“: `an`, `betreff`, `text` (Umfragewerte per `$('Umfrage-Daten (Beispiel)').first().json`)
 6. `n8n-nodes-base.if` (2.3): `mail_versenden` ist true
-7. true: `n8n-nodes-base.emailSend` (2.1), `operation: send`, `emailFormat: text`. false: `n8n-nodes-base.noOp` (Vorschau)
+7. true: `n8n-nodes-base.sendInBlue` (1) — im Editor heisst er **„Brevo“**. `resource: "email"`, `operation: "send"`, `sender` = verifizierte Adresse aus dem Zugangsbereich, **`receipients`** = Empfänger (Tippfehler mit „ei“ steckt im n8n-Code, wer `recipients` schreibt bekommt eine Mail ohne Empfänger und keine Fehlermeldung), `subject`, `textContent`. Credential: **„Brevo“**, liegt auf der zentralen Bootcamp-n8n bereit.
+   ⚠️ **Nicht** `n8n-nodes-base.emailSend` nehmen. Der spricht SMTP, und die Ports 25/465/587 sind auf dem Server gesperrt: er wartet **240 Sekunden** und meldet dann `Connection timeout` — das sieht aus wie ein hängender Workflow, ist aber der gesperrte Port.
+   false: `n8n-nodes-base.noOp` (Vorschau)
 
 **Bahn 2: Antworten sammeln**
 1. `n8n-nodes-base.formTrigger` (2.5): Felder `Name` (text), `Organisation` (text), `Mailadresse` (email), `Termine` (checkbox, `requiredField: true`), `Anmerkung` (textarea). `fieldLabel` und `fieldName` gleich wählen. `options.path` mit Kürzel.

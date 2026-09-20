@@ -25,7 +25,7 @@ Validation is typically iterative:
 ## What Validation Does NOT Check
 
 ⚠️ **Credentials are not validated.** A node with **no credential at all** passes with
-`valid: true, 0 errors, 0 warnings`. Measured on n8n 2.38.7 on 19.09.2026: an `httpRequest`
+`valid: true, 0 errors, 0 warnings`. Measured on n8n 2.38.7 on 19.09.2026 (instance now runs 2.39.8; re-checked 20.09.2026, unchanged): an `httpRequest`
 node with `genericAuthType: httpBasicAuth` and no credential attached validated clean, then
 failed at runtime.
 

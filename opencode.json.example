@@ -8,6 +8,7 @@
       "environment": {
         "N8N_API_URL": "https://DEINE-N8N-ADRESSE",
         "N8N_API_KEY": "DEIN_N8N_API_KEY",
+        "N8N_MCP_ACCESS_TOKEN": "DEIN_MCP_ACCESS_TOKEN",
         "MCP_MODE": "stdio",
         "LOG_LEVEL": "error",
         "DISABLE_CONSOLE_OUTPUT": "true"

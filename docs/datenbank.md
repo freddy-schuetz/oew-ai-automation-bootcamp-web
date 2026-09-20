@@ -83,6 +83,30 @@ Wenn Daten in einer **Airtable-artigen Oberfläche** sichtbar sein oder von **Ni
 
 Wenn eine **veröffentlichte App** (`https://app-xxxx.buildbar.at`) und/oder **mehrere Dienste** eine **gemeinsame** Postgres-Datenbank brauchen, oder du **Login/Auth**, **Datei-Storage** bzw. **Vektorsuche (pgvector, z. B. KI-Gedächtnis)** willst.
 
+> ⚠️ **Vektorsuche: technisch da, aber im Bootcamp nicht bedienbar.**
+> Die ÖW-Supabase hat seit dem 20.09.2026 **pgvector 0.8.0**, eine Tabelle `documents`
+> (Spalte `embedding` vom Typ `vector(1536)`) und die Funktion
+> `match_documents(query_embedding, match_count, filter)`.
+> **Aber:** Um Text in Vektoren zu verwandeln, braucht man einen Embedding-Dienst — und der
+> einzige KI-Zugang im Bootcamp ist **Anthropic**, und Anthropic bietet keine Embeddings an.
+> Es gibt auf der Instanz kein Credential für OpenAI, Cohere, Mistral oder Google.
+> **RAG ist deshalb kein Bootcamp-Use-Case**, solange kein vierter Zugang dazukommt.
+>
+> **Was stattdessen funktioniert und für deutschsprachige Texte oft besser ist:**
+> Postgres kann **deutsche Volltextsuche**, ohne jeden fremden Dienst. Am 20.09. auf der
+> ÖW-Supabase geprüft:
+> ```sql
+> -- Spalte anlegen und füllen
+> ALTER TABLE deine_tabelle ADD COLUMN suche tsvector
+>   GENERATED ALWAYS AS (to_tsvector('german', coalesce(titel,'') || ' ' || coalesce(text,''))) STORED;
+> CREATE INDEX ON deine_tabelle USING gin(suche);
+> -- Suchen, mit Stammformen: „Hütten“ findet „Hütte“
+> SELECT titel FROM deine_tabelle WHERE suche @@ websearch_to_tsquery('german', 'Almhütte Winter');
+> ```
+> Das versteht Beugung und Komposita, braucht keinen Schlüssel, kostet nichts und ist in
+> fünf Minuten eingerichtet.
+
+
 - **Zugangsdaten** im Zugangsbereich: **Project-URL**, **anon-Key** und **service_role-Key**.
 - **anon-Key** + Project-URL dürfen ins **Frontend** (`@supabase/supabase-js` mit `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
 - ⚠️ **Row Level Security (RLS):** Aus dem Frontend nur Tabellen mit aktivierter Row Level Security (RLS) und passenden Policies ansprechen. Ohne RLS die Daten nur über n8n lesen und schreiben (Supabase-Node mit service_role). Sonst kann jede Person, die die App-Adresse kennt, mit dem anon-Key alle Tabellen (und Storage-Buckets ohne Policy) aller Teilnehmenden lesen und beschreiben. Das eigene Präfix schützt davor nicht.
