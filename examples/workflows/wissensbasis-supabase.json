@@ -1,0 +1,441 @@
+{
+  "name": "Wissensbasis mit Supabase (fuellen und fragen)",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Wissensbasis fuellen und befragen\n\nZwei Bahnen, beide mit einem Formular als Start.\n\n**Bahn 1, oben: fuellen.** Du gibst einen Text hinein (ein Presseartikel, eine\nHausordnung, eine Angebotsbeschreibung). Der Text wird in Stuecke zerteilt,\njedes Stueck wird in eine Zahlenreihe uebersetzt (das sind die \"Embeddings\"),\nund diese Zahlenreihen landen in der Supabase-Tabelle `documents`.\n\n**Bahn 2, unten: fragen.** Du stellst eine Frage. Die Frage wird in dieselbe\nArt Zahlenreihe uebersetzt, und die Datenbank sucht die Textstuecke, die am\nnaechsten dranliegen. Der Agent bekommt nur diese Stuecke und antwortet daraus.\n\nDas ist der Unterschied zur Stichwortsuche: \"Wo kann ich einkehren?\" findet\nauch \"Almhuette geoeffnet\", obwohl kein Wort uebereinstimmt.",
+        "height": 300,
+        "width": 760,
+        "color": 4
+      },
+      "id": "doku-ueberblick",
+      "name": "Doku Ueberblick",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Was du dafuer brauchst\n\n**Drei Zugaenge**, alle im Zugangsbereich https://buildbar.at/oew#zugang:\n\n1. **Supabase**: Project-URL und der `service_role`-Key. In n8n als Credential\n   vom Typ \"Supabase\". Nur in n8n, nie im Frontend.\n2. **OpenAI** fuer die Embeddings. Credential-Name **\"OpenAI\"**.\n3. **Anthropic** fuer die Antwort. Credential-Name **\"Anthropic\"**, liegt schon\n   auf der Bootcamp-n8n.\n\nWarum zwei KI-Zugaenge? Anthropic kann Texte schreiben, aber keine Embeddings\nerzeugen. Dafuer braucht es OpenAI. Beim Antworten ist es umgekehrt egal.\n\n**Die Tabelle liegt schon bereit**: `documents` in der OEW-Supabase, mit der\nSpalte `embedding` (1536 Zahlen, passend zu `text-embedding-3-small`) und der\nSuchfunktion `match_documents`. Du musst nichts anlegen.",
+        "height": 300,
+        "width": 520,
+        "color": 5
+      },
+      "id": "doku-zugaenge",
+      "name": "Doku Zugaenge",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        620,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Fallen\n\n- **Alle teilen sich eine Tabelle.** Setze in den Metadaten ein Feld mit deinem\n  Kuerzel (siehe Knoten \"Herkunft merken\") und filtere beim Suchen darauf.\n  Sonst findet deine Frage die Texte der anderen.\n- **Die Dimension muss passen.** `text-embedding-3-small` liefert 1536 Zahlen,\n  genau so ist die Spalte angelegt. Ein anderes Modell mit anderer Laenge\n  scheitert beim Einfuegen.\n- **Jedes Einfuegen kostet**, wenn auch sehr wenig. Teste mit einem kurzen Text,\n  nicht mit hundert Seiten.\n- **Zu grosse Stuecke sind schlechter als zu kleine.** 1000 Zeichen mit 200\n  Ueberlappung ist ein brauchbarer Anfang.\n- **Leeres Ergebnis heisst nicht \"nichts gefunden\"**, es heisst oft \"Tabelle ist\n  leer\". Fuelle erst Bahn 1, bevor du Bahn 2 testest.",
+        "height": 300,
+        "width": 520,
+        "color": 3
+      },
+      "id": "doku-fallen",
+      "name": "Doku Fallen",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1160,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "formTitle": "Wissensbasis fuellen",
+        "formDescription": "Text hineingeben, der spaeter durchsuchbar sein soll.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Titel",
+              "requiredField": true
+            },
+            {
+              "fieldLabel": "Text",
+              "fieldType": "textarea",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "path": "kuerzel-wissen-fuellen"
+        }
+      },
+      "id": "formular:-text-hinzufuegen",
+      "name": "Formular: Text hinzufuegen",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -140,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1",
+              "name": "titel",
+              "value": "={{ $json.Titel }}",
+              "type": "string"
+            },
+            {
+              "id": "a2",
+              "name": "text",
+              "value": "={{ $json.Text }}",
+              "type": "string"
+            },
+            {
+              "id": "a3",
+              "name": "kuerzel",
+              "value": "kuerzel",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "herkunft-merken",
+      "name": "Herkunft merken",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        80,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "name"
+        },
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "id": "in-die-wissensbasis-schreiben",
+      "name": "In die Wissensbasis schreiben",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        320,
+        80
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.text }}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "kuerzel",
+                "value": "={{ $json.kuerzel }}"
+              },
+              {
+                "name": "titel",
+                "value": "={{ $json.titel }}"
+              }
+            ]
+          }
+        },
+        "textSplittingMode": "custom"
+      },
+      "id": "text-zerteilen",
+      "name": "Text zerteilen",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1.1,
+      "position": [
+        400,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "chunkSize": 1000,
+        "chunkOverlap": 200,
+        "options": {}
+      },
+      "id": "stuecke-bilden",
+      "name": "Stuecke bilden",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterRecursiveCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        520,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-small",
+        "options": {}
+      },
+      "id": "embeddings-openai",
+      "name": "Embeddings OpenAI",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        180,
+        300
+      ],
+      "credentials": {
+        "openAiApi": {
+          "name": "OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "formTitle": "Wissensbasis befragen",
+        "formDescription": "Frage in normaler Sprache.",
+        "formFields": {
+          "values": [
+            {
+              "fieldLabel": "Frage",
+              "requiredField": true
+            }
+          ]
+        },
+        "options": {
+          "path": "kuerzel-wissen-fragen"
+        }
+      },
+      "id": "formular:-frage-stellen",
+      "name": "Formular: Frage stellen",
+      "type": "n8n-nodes-base.formTrigger",
+      "typeVersion": 2.2,
+      "position": [
+        -140,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.Frage }}",
+        "options": {
+          "systemMessage": "Du beantwortest Fragen AUSSCHLIESSLICH aus der Wissensbasis. Benutze dafuer das Werkzeug. Findest du nichts, sage das deutlich und erfinde nichts. Nenne zu jeder Aussage den Titel des Textstuecks, aus dem sie stammt."
+        }
+      },
+      "id": "antwort-erzeugen",
+      "name": "Antwort erzeugen",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        160,
+        700
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-opus-5",
+          "mode": "list"
+        },
+        "options": {
+          "maxTokensToSample": 1500
+        }
+      },
+      "id": "anthropic-chat-model",
+      "name": "Anthropic Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        80,
+        920
+      ],
+      "credentials": {
+        "anthropicApi": {
+          "name": "Anthropic"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Durchsucht die eigene Wissensbasis nach Textstuecken, die zur Frage passen. Gib die Frage in normaler Sprache weiter.",
+        "tableName": {
+          "__rl": true,
+          "value": "documents",
+          "mode": "name"
+        },
+        "topK": 5,
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "id": "wissensbasis-durchsuchen",
+      "name": "Wissensbasis durchsuchen",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1.3,
+      "position": [
+        300,
+        920
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "name": "Supabase"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-small",
+        "options": {}
+      },
+      "id": "embeddings-openai-(suche)",
+      "name": "Embeddings OpenAI (Suche)",
+      "type": "@n8n/n8n-nodes-langchain.embeddingsOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        300,
+        1140
+      ],
+      "credentials": {
+        "openAiApi": {
+          "name": "OpenAI"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Drei Dinge zum Formular, die Zeit kosten\n\nAm 20.09.2026 selbst gemessen, alle drei melden keinen Fehler:\n\n**1. Der Pfad gehoert unter `options`, nicht nach oben.** Steht `path` auf der\nobersten Ebene des Formular-Knotens, wird es stillschweigend ignoriert und das\nFormular ist nur unter `/form/<webhookId>` erreichbar. Richtig ist\n`options.path`. Dann laeuft es unter `/form/dein-kuerzel-...`.\n\n**2. Zum Testen per Befehlszeile: multipart, und Felder nach Position.**\nDas Formular erwartet `multipart/form-data`. Und die Felder heissen beim\nEinreichen **`field-0`, `field-1`** in der Reihenfolge der Felder, NICHT nach\nihrer Beschriftung. Wer `-F \"Titel=...\"` schickt, bekommt HTTP 200 und im\nWorkflow steht `Titel: null`.\n\n```\ncurl -X POST -F \"field-0=Mein Titel\" -F \"field-1=Mein Text\" \\\n  https://n8n-oew.buildbar.at/form/dein-kuerzel-wissen-fuellen\n```\n\n**3. HTTP 200 heisst nur, dass das Formular angenommen hat.** Der Ablauf laeuft\ndanach weiter. Ob wirklich etwas in der Datenbank steht, siehst du unter\nExecutions oder indem du nachzaehlst.",
+        "height": 460,
+        "width": 520,
+        "color": 3
+      },
+      "id": "doku-formular",
+      "name": "Doku Formular",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        620
+      ]
+    }
+  ],
+  "connections": {
+    "Formular: Text hinzufuegen": {
+      "main": [
+        [
+          {
+            "node": "Herkunft merken",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Herkunft merken": {
+      "main": [
+        [
+          {
+            "node": "In die Wissensbasis schreiben",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "In die Wissensbasis schreiben",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Text zerteilen": {
+      "ai_document": [
+        [
+          {
+            "node": "In die Wissensbasis schreiben",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stuecke bilden": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Text zerteilen",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formular: Frage stellen": {
+      "main": [
+        [
+          {
+            "node": "Antwort erzeugen",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Antwort erzeugen",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wissensbasis durchsuchen": {
+      "ai_tool": [
+        [
+          {
+            "node": "Antwort erzeugen",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings OpenAI (Suche)": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Wissensbasis durchsuchen",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

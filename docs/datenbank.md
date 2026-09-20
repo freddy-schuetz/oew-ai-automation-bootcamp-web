@@ -83,30 +83,46 @@ Wenn Daten in einer **Airtable-artigen Oberfläche** sichtbar sein oder von **Ni
 
 Wenn eine **veröffentlichte App** (`https://app-xxxx.buildbar.at`) und/oder **mehrere Dienste** eine **gemeinsame** Postgres-Datenbank brauchen, oder du **Login/Auth**, **Datei-Storage** bzw. **Vektorsuche (pgvector, z. B. KI-Gedächtnis)** willst.
 
-> ⚠️ **Vektorsuche: technisch da, aber im Bootcamp nicht bedienbar.**
-> Die ÖW-Supabase hat seit dem 20.09.2026 **pgvector 0.8.0**, eine Tabelle `documents`
-> (Spalte `embedding` vom Typ `vector(1536)`) und die Funktion
-> `match_documents(query_embedding, match_count, filter)`.
-> **Aber:** Um Text in Vektoren zu verwandeln, braucht man einen Embedding-Dienst — und der
-> einzige KI-Zugang im Bootcamp ist **Anthropic**, und Anthropic bietet keine Embeddings an.
-> Es gibt auf der Instanz kein Credential für OpenAI, Cohere, Mistral oder Google.
-> **RAG ist deshalb kein Bootcamp-Use-Case**, solange kein vierter Zugang dazukommt.
+> **Vektorsuche: eingerichtet und nachgewiesen.**
+> Die ÖW-Supabase hat **pgvector 0.8.0**, die Tabelle `documents` (Spalte `embedding`
+> vom Typ `vector(1536)`) und die Funktion `match_documents(query_embedding, match_count, filter)`.
+> Auf der zentralen n8n liegen die Credentials **„Supabase“** und **„OpenAI“** bereit.
+> Am 20.09.2026 durchgestochen: Text hineingegeben, Frage gestellt, Antwort kam mit Quelle.
 >
-> **Was stattdessen funktioniert und für deutschsprachige Texte oft besser ist:**
-> Postgres kann **deutsche Volltextsuche**, ohne jeden fremden Dienst. Am 20.09. auf der
-> ÖW-Supabase geprüft:
+> **So baust du es**, zwei Bahnen — fertig zum Importieren in
+> [`examples/workflows/wissensbasis-supabase.json`](../examples/workflows/wissensbasis-supabase.json):
+>
+> **Füllen:** Formular → **Supabase Vector Store** (Modus *Insert Documents*, Tabelle
+> `documents`, Option `queryName: match_documents`). Daran hängen zwei Unterknoten:
+> **Default Data Loader** (mit *Recursive Character Text Splitter*, 1000 Zeichen,
+> 200 Überlappung) und **Embeddings OpenAI** mit dem Modell `text-embedding-3-small`.
+>
+> **Fragen:** Formular → **AI Agent**. Daran: **Anthropic Chat Model** für die Antwort
+> und **Supabase Vector Store** im Modus *Retrieve Documents (As Tool for AI Agent)*,
+> wieder mit **Embeddings OpenAI** darunter.
+>
+> **Warum zwei KI-Zugänge?** Anthropic schreibt die Antwort, kann aber keine Embeddings
+> erzeugen. Dafür ist OpenAI da. Beim Antworten wäre es umgekehrt egal.
+>
+> **⚠️ Alle teilen sich die Tabelle `documents`.** Schreib in die Metadaten ein Feld mit
+> deinem Kürzel und filtere beim Suchen darauf, sonst findet deine Frage die Texte der
+> anderen.
+>
+> **⚠️ Die Dimension muss passen.** `text-embedding-3-small` liefert genau 1536 Zahlen,
+> so ist die Spalte angelegt. Ein anderes Modell mit anderer Länge scheitert beim Einfügen.
+>
+> **Wann du es NICHT brauchst:** Für die meisten Vorhaben reicht die **deutsche
+> Volltextsuche** in Postgres — ohne fremden Dienst, ohne Kosten, und sie versteht
+> Beugung und Komposita. Am 20.09. geprüft:
 > ```sql
-> -- Spalte anlegen und füllen
 > ALTER TABLE deine_tabelle ADD COLUMN suche tsvector
 >   GENERATED ALWAYS AS (to_tsvector('german', coalesce(titel,'') || ' ' || coalesce(text,''))) STORED;
 > CREATE INDEX ON deine_tabelle USING gin(suche);
-> -- Suchen, mit Stammformen: „Hütten“ findet „Hütte“
 > SELECT titel FROM deine_tabelle WHERE suche @@ websearch_to_tsquery('german', 'Almhütte Winter');
 > ```
-> Das versteht Beugung und Komposita, braucht keinen Schlüssel, kostet nichts und ist in
-> fünf Minuten eingerichtet.
-
-
+> Vektoren lohnen sich, wenn die Frage **andere Wörter benutzt als der Text**
+> („Vierbeiner“ findet „Hunde sind erlaubt“). Bei gleichen Wörtern ist die Volltextsuche
+> schneller, billiger und leichter zu erklären.
 - **Zugangsdaten** im Zugangsbereich: **Project-URL**, **anon-Key** und **service_role-Key**.
 - **anon-Key** + Project-URL dürfen ins **Frontend** (`@supabase/supabase-js` mit `NEXT_PUBLIC_SUPABASE_URL` + `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
 - ⚠️ **Row Level Security (RLS):** Aus dem Frontend nur Tabellen mit aktivierter Row Level Security (RLS) und passenden Policies ansprechen. Ohne RLS die Daten nur über n8n lesen und schreiben (Supabase-Node mit service_role). Sonst kann jede Person, die die App-Adresse kennt, mit dem anon-Key alle Tabellen (und Storage-Buckets ohne Policy) aller Teilnehmenden lesen und beschreiben. Das eigene Präfix schützt davor nicht.
