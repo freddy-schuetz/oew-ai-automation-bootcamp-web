@@ -24,6 +24,50 @@ In n8n **eingebaut**, in jeder n8n verfügbar (zentrale Bootcamp-n8n oder eigene
 - Sag zu Claude: *„Leg eine Data Table `mk_anfragen` mit den Spalten name, email, status an und schreib im Workflow neue Einträge hinein."*
 - Winziger Zustand ohne Tabelle: n8n **workflow static data** (Schlüssel-Werte).
 
+### ⚠️ Zwei stille Zeilendeckel (gemessen am 19.09.2026)
+
+Beide melden **keinen Fehler**. Der Workflow läuft grün durch und verarbeitet trotzdem nur einen
+Bruchteil der Daten.
+
+| Wo | Was passiert |
+|---|---|
+| **Data-Table-Node** | Liefert bei `limit: 2000` genau **50 Zeilen**. Sie fällt still auf ihren Default zurück. |
+| **n8n-API** | Nimmt höchstens `limit=200`. Bei 500 antwortet sie mit **0 Zeilen**, ohne Fehler und ohne Cursor. |
+
+**Immer die Zeilenzahl gegen die Tabelle prüfen.** Wenn die Tabelle 1631 Zeilen hat und der Node
+50 liefert, ist das kein Zufall.
+
+**Ab etwa 50 Zeilen: über die API blättern.** Ein HTTP-Request-Node mit Cursor-Paginierung holt
+alles. Dafür brauchst du in n8n eine Credential vom Typ `httpHeaderAuth` mit dem Namen
+`X-N8N-API-KEY` und dem n8n-API-Key als Wert. Den API-Key findest du im
+[Zugangsbereich](https://buildbar.at/oew#zugang).
+
+```
+URL    http://127.0.0.1:5678/api/v1/data-tables/<TABELLEN-ID>/rows
+Query  limit = 200
+Options -> Pagination
+  Pagination Mode        Update a Parameter in Each Request
+  Parameter (Query)      cursor = {{ $response.body.nextCursor }}
+  Pagination Complete    Other
+  Complete Expression    {{ !$response.body.nextCursor }}
+  Max Pages              30
+```
+
+Die Adresse `http://127.0.0.1:5678` spricht n8n von innen an, der Knoten läuft ja in der n8n
+selbst. Bei einer eigenen n8n mit anderem Port stattdessen deren Adresse eintragen.
+
+Danach im Code-Node alle Seiten zusammenführen und **prüfen, ob genug angekommen ist**:
+
+```javascript
+const alle = [];
+for (const it of $input.all()) for (const z of (it.json.data || [])) alle.push(z);
+if (alle.length < 100) {
+  throw new Error('Nur ' + alle.length + ' Zeilen geladen. Vermutlich greift ein stiller Deckel.');
+}
+```
+
+Fertiger Beispiel-Workflow zum Importieren: `examples/workflows/datatable-alle-zeilen.json`.
+
 → **Für die allermeisten n8n-Vorhaben ist das der richtige, niederschwelligste Weg.**
 
 ## 2. NocoDB: sichtbare Tabelle mit Oberfläche

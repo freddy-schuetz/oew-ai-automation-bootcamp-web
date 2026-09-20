@@ -153,6 +153,91 @@ Für LangChain/AI-Nodes `sourceOutput` nutzen: `ai_languageModel`, `ai_tool`, `a
 
 ⚠️ **HTTP-Tool für Agents:** den **regulären HTTP Request als Tool** verwenden (`n8n-nodes-base.httpRequestTool`, v4.x) mit `$fromAI('feld','Beschreibung','string')` für vom LLM gefüllte Werte, **nicht** den Legacy-Node `@n8n/n8n-nodes-langchain.toolHttpRequest` (v1.1, deprecated). Allgemein gilt: Fast jeder Standard-Node kann als Tool an den Agent gehängt werden.
 
+### Ein grüner Lauf ist kein Beweis
+
+Die teuersten Fehler in n8n melden **keinen Fehler**. Der Ablauf läuft durch, ist
+grün, und das Ergebnis ist trotzdem falsch. Beim Vorabbau der Bootcamp-Use-Cases
+waren das **neun von dreizehn** gefundenen Stolperstellen.
+
+**Deshalb nach jedem Abruf prüfen, ob das ERWARTETE Ergebnis da ist**, nicht ob der
+Aufruf funktioniert hat:
+
+```javascript
+const zeilen = $input.all();
+if (zeilen.length < ERWARTET) {
+  throw new Error('Nur ' + zeilen.length + ' statt ' + ERWARTET + '. Nicht weiterarbeiten.');
+}
+```
+
+Diese fünf kosten sonst je eine halbe Stunde Suche (alle am 19.09.2026 gemessen):
+
+| Wo | Was still passiert |
+|---|---|
+| **HTTP-Node, Query-Parameter** | Ein Parameter lässt sich **nicht mehrfach** senden. Wer `parameters=a`, `parameters=b` einzeln anlegt, sendet nur den letzten. Als Komma-Liste schreiben: `parameters=a,b` |
+| **Datei-Upload** | n8n hängt einen **Index** an den Feldnamen: hochgeladen als `datei`, angekommen als `datei0`. Und die Endung wird aus dem **MIME-Typ** geraten, nicht aus dem Namen — `report.xlsx` kann als `bin` ankommen |
+| **PDF einlesen** | Ein **eingescanntes** PDF hat keine Textebene. `extractFromFile` liefert einen leeren String, ohne zu scheitern. Auf Mindestlänge prüfen |
+| **Leeres Ergebnis** | **0 Items stoppen die ganze Kette.** Ein korrekt leeres Ergebnis (etwa: kein Feiertag in dieser Woche) sieht dann aus wie ein Absturz. `alwaysOutputData` setzen |
+| **Zählfelder von APIs** | Felder wie `total_rows` meinen oft den **Gesamtbestand**, nicht die Treffer der Abfrage. Nie als Trefferzahl lesen, immer die Liste selbst zählen |
+
+**Und für Logik, die man prüfen kann:** erst ausserhalb von n8n testen, dann
+einbauen. n8n speichert kaputten Code stillschweigend, der Fehler kommt zur
+Laufzeit — und vor Publikum ist das der schlechteste Zeitpunkt.
+
+### Workflows ohne Webhook: von Hand starten
+
+Über den Web-Weg kannst du nur Workflows **mit Webhook** selbst auslösen. Der Hub stellt die
+Verbindung zur n8n her, gibt aber den zusätzlichen Schlüssel nicht weiter, den n8n für das
+Starten anderer Trigger verlangt. Bei einem Workflow mit **Zeitplan (Schedule Trigger)** oder
+**manuellem Trigger** antwortet `n8n_test_workflow` deshalb mit
+`Workflow cannot be triggered externally`. Das ist **kein** Fehler im Workflow, sondern eine
+Grenze des Web-Wegs. Aus demselben Grund lassen sich Spalten einer bestehenden Data Table nicht
+nachträglich per MCP ändern; das geht im n8n-Editor.
+
+**So testest du trotzdem, es gibt zwei Wege:**
+- **Im n8n-Editor von Hand starten:** Bitte die Person, den Workflow in
+  `https://n8n-oew.buildbar.at` zu öffnen und auf **Execute workflow** zu klicken. Danach
+  siehst du unter **Executions**, was jeder Knoten geliefert hat. Das ist der Normalweg für
+  Berichte und alles Zeitgesteuerte.
+- **Zum Entwickeln einen Webhook danebenhängen:** zusätzlich einen Webhook-Trigger an den ersten
+  Verarbeitungsschritt hängen (Pfad mit eigenem Kürzel, z. B. `mk-test`). Dann kannst du den
+  Ablauf per MCP auslösen und das Ergebnis selbst prüfen. Vor der Übergabe den Test-Webhook
+  wieder entfernen, sonst ist der Ablauf für jeden auslösbar, der die Adresse kennt.
+
+**Sag klar, wenn du einen Workflow nicht selbst starten konntest**, und bitte um den Klick im
+Editor. Eine grüne Validierung ist kein Testlauf.
+
+### Mailversand: Brevo, nicht SMTP
+
+**Mailversand funktioniert.** Das Credential **„Brevo"** liegt auf der zentralen Bootcamp-n8n
+und ist einsatzbereit. Nimm den Node **`n8n-nodes-base.sendInBlue`** (heisst im Editor „Brevo"),
+`resource: "email"`, `operation: "send"`:
+
+```
+sender        <Absender aus dem Zugangsbereich>  (muss in Brevo verifiziert sein)
+receipients   empfaenger@example.com           (Achtung: n8n schreibt das Feld falsch,
+                                                mit "ei" statt "i" — receipients)
+subject       {{ $json.betreff }}
+textContent   {{ $json.bericht }}
+sendHTML      false, oder true für HTML
+```
+
+Kontingent: **300 Mails pro Tag**, für das Bootcamp reichlich.
+
+⚠️ **Nimm nicht den Node „Send Email".** Der spricht SMTP, und die Ports 25, 465 und 587 sind
+auf dem Server gesperrt (wie bei fast allen Hostern, gegen Spam-Versand). Der Node wartet
+**240 Sekunden** und meldet dann nur `Connection timeout` — er sieht also nicht nach einem
+Konfigurationsfehler aus, sondern nach einem hängenden Workflow. Brevo läuft über HTTPS und
+hat das Problem nicht.
+
+**Eigener Absender?** In Brevo muss jede Absenderadresse verifiziert sein. Wer eine eigene
+verwenden will, trägt sie unter Senders ein und bestätigt die Mail. Für alles andere den
+Absender aus dem Zugangsbereich nehmen.
+
+**Ohne Versand geht es auch:** Ergebnis in eine Data Table schreiben oder den Webhook die
+fertige Liste zurückgeben lassen und im Frontend anzeigen. Für Berichte, die jemand prüfen
+soll, bevor sie rausgehen, eignet sich zusätzlich ein Outlook- oder Gmail-**Entwurf**
+(`resource: "draft"`).
+
 ## Best Practices
 
 ### Do

@@ -68,6 +68,8 @@ Nicht passend: einmalige Ad-hoc-Analysen (dafür reicht Claude direkt mit der Da
 ## Typische Fallen
 - **0 Items stoppen alles:** Liefert der Datenknoten nichts, laufen die folgenden Knoten nicht und niemand merkt es. Siehe Schritt 3.
 - **Data Table Get liefert nur 50 Zeilen**, solange `returnAll` aus ist. Zeilenzahl im Ergebnis gegen die Tabelle prüfen.
+- **Versand über Brevo, nicht über „Send Email“.** Das Credential „Brevo“ liegt auf der zentralen Bootcamp-n8n bereit: Node `n8n-nodes-base.sendInBlue`, `resource: "email"`, `operation: "send"`, Absender laut Zugangsbereich (muss in Brevo verifiziert sein), 300 Mails pro Tag. ⚠️ Das Empfängerfeld heisst im n8n-Code **`receipients`** (Tippfehler mit „ei“). Wer `recipients` schreibt, bekommt keine Fehlermeldung, sondern eine Mail ohne Empfänger. Der Node „Send Email“ spricht SMTP und kommt vom Server nicht hinaus (Ports 25, 465, 587 gesperrt): er wartet 240 Sekunden und meldet dann `Connection timeout`, sieht also aus wie ein hängender Workflow.
+- **Data Table Get liefert nur 50 Zeilen** — und zwar auch dann, wenn `limit` höher steht. Am 19.09.2026 gemessen: bei `limit: 2000` kamen 50 Zeilen, ohne Fehlermeldung. Zeilenzahl im Ergebnis immer gegen die Tabelle prüfen. Ab etwa 50 Zeilen über die API blättern, Rezept in `docs/datenbank.md`.
 - **Zeitzone:** Der Zeitplan und `$now` richten sich nach der Workflow-Zeitzone. Ohne Einstellung gilt die Instanz-Zeitzone, der Bericht kommt dann zur falschen Stunde oder mit verschobenem Zeitraum.
 - **Zeitplan läuft automatisch nur bei aktivem Workflow.** Im Editor lässt er sich per Klick testen, das beweist aber nicht, dass der Zeitplan aktiv ist.
 - **XLSX:** Die Option „Sheet Name“ muss exakt dem Blattnamen entsprechen (z. B. „Tabelle1“).

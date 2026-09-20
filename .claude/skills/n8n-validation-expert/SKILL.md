@@ -22,6 +22,22 @@ Validation is typically iterative:
 
 ---
 
+## What Validation Does NOT Check
+
+⚠️ **Credentials are not validated.** A node with **no credential at all** passes with
+`valid: true, 0 errors, 0 warnings`. Measured on n8n 2.38.7 on 19.09.2026: an `httpRequest`
+node with `genericAuthType: httpBasicAuth` and no credential attached validated clean, then
+failed at runtime.
+
+**A green validation is not proof that the workflow can run.** It proves the structure is
+sound — node types exist, connections are valid, expressions parse. It says nothing about
+whether the credentials, endpoints or permissions behind them are in place.
+
+After validating, check separately:
+- Does every node that needs a credential have one attached?
+- Does that credential actually work? (Run the workflow once with real data.)
+- Are the external services reachable from the n8n container, not just from your laptop?
+
 ## Error Severity Levels
 
 ### 1. Errors (Must Fix)

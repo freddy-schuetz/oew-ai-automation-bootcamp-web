@@ -135,6 +135,43 @@ get_node({nodeType: "nodes-base.slack", mode: "docs"})
 
 ---
 
+## Large Code Nodes: ship them with create
+
+When an agent writes a Code node, the whole `jsCode` travels inside the tool call. Large
+nested payloads can be truncated on the way out, and the failure looks like malformed JSON
+rather than a size limit — so it is easy to misread as a syntax error in your code.
+
+Measured on 19.09.2026 (n8n 2.38.7, n8n-mcp 2.84): `n8n_create_workflow` carried a Code node
+of **12,533 characters** without trouble, umlauts in regexes included. The same code sent via
+`n8n_update_partial_workflow` with `addNode` failed at roughly **2 KB**. A short Code node in
+the same call went through fine, so it is the payload size, not the operation.
+
+**Practical rules:**
+- Ship Code nodes **with the initial `n8n_create_workflow` call** whenever you can.
+- Keep any Code node you add later via `addNode` or `updateNode` **under roughly 1.5 KB**.
+- Longer logic: split it across several smaller Code nodes, or rebuild the workflow with
+  `n8n_create_workflow` instead of patching it.
+- Test the logic outside n8n first (plain `node script.js` with a small harness). n8n stores
+  broken code silently and only fails at runtime — and debugging it in the editor in front of
+  an audience is the worst place to find out.
+
+## AI connections need `sourceOutput`, not `sourcePort`
+
+When wiring a model, tool or memory node to an Agent or Chain via
+`n8n_update_partial_workflow`, the connection type goes in **`sourceOutput`**:
+
+```json
+{"type": "addConnection", "source": "Claude", "target": "Extract data",
+ "sourceOutput": "ai_languageModel"}
+```
+
+Passing `sourcePort: "ai_languageModel"` is accepted without complaint and stored
+as a plain `main` connection. The workflow looks right in the editor and fails at
+runtime with `A Model sub-node must be connected and enabled`.
+
+Valid values: `ai_languageModel`, `ai_tool`, `ai_memory`, `ai_embedding`,
+`ai_vectorStore`, `ai_outputParser`, `ai_document`, `ai_textSplitter`.
+
 ## Common Mistakes
 
 ### Mistake 1: Wrong nodeType Format

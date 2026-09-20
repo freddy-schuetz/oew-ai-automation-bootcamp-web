@@ -53,6 +53,8 @@ Du wählst einen von zwei Wegen. Beide führen zum selben Ergebnis.
   - **Eigene n8n mit API-Zugang**, selbst gehostet oder als bezahlter Cloud-Plan. Du kannst dort einen API-Key erzeugen.
 - [ ] Du weißt: Die **kostenlose Testversion von n8n Cloud reicht nicht**. Sie hat keine öffentliche API, und die braucht Claude, um mit n8n zu arbeiten.
 - [ ] **KI-Zugang:** Du findest den Anthropic-API-Key im Zugangsbereich. Er hat ein Ausgabelimit. In n8n trägst du ihn als Zugangsdaten „Anthropic“ ein, nie in eine Datei im Repository. Auf der zentralen Bootcamp-n8n gibt es die Zugangsdaten „Anthropic“ vielleicht schon. Dann nimmst du diese und legst keine zweiten an.
+- [ ] **Workflows ohne Webhook startest du selbst:** Im Web-Weg richtet der Hub die Verbindung zu n8n ein. Claude kann darüber Workflows **mit Webhook** auslösen, aber keine mit Zeitplan oder manuellem Trigger. Der Test meldet dann „Workflow cannot be triggered externally“. Solche Workflows startest du im n8n-Editor selbst mit „Execute workflow“. Gut, das vorher zu wissen: Die Meldung ist kein Fehler in deinem Workflow.
+- [ ] **Mailversand läuft über Brevo:** Mails verschickt dein Workflow mit dem Knoten „Brevo“, nicht mit „Send Email“. SMTP kommt vom Server nicht hinaus, die Ports sind gesperrt. Auf der zentralen Bootcamp-n8n sind die Zugangsdaten „Brevo“ schon hinterlegt. Der Absender muss in Brevo verifiziert sein; die verifizierte Adresse steht im Zugangsbereich.
 
 ## 5. Microsoft 365 oder Google
 

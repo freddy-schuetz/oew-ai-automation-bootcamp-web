@@ -9,6 +9,27 @@ Ziel: Jede Mail bekommt eine Kategorie aus einer festen Liste und, wo sinnvoll, 
 
 **Startpunkt:** `examples/workflows/mail-triage-entwuerfe.json` (Beispielmails, Information Extractor, Beschwerde-Weiche, Entwurf mit Output Parser, deaktivierter Outlook-Entwurf). Lesen, Kategorien und Fakten auf die Organisation zuschneiden, dann per n8n-mcp anlegen.
 
+## Mailanhänge: die Endung steht im Namen, nicht im Typ
+
+Ein Anhang trägt oft `application/octet-stream` als MIME-Typ, auch wenn er
+`report.xlsx` heisst. Wer die Endung aus dem Typ ableitet, bekommt `bin` und
+verwirft die Datei als unbekanntes Format.
+
+**Die Endung deshalb aus dem Dateinamen lesen**, den MIME-Typ nur als Rückfall:
+
+```javascript
+const name = String(anhang.fileName || '');
+let endung = name.includes('.') ? name.slice(name.lastIndexOf('.') + 1).toLowerCase() : '';
+if (!endung || endung === 'bin') {
+  if (String(anhang.mimeType).includes('pdf')) endung = 'pdf';
+  else if (String(anhang.mimeType).includes('spreadsheet')) endung = 'xlsx';
+}
+```
+
+Zweiter Punkt aus derselben Messung: In einem echten Postfach hängen an vielen
+Mails **Signaturbilder**. Ein Filter auf „hat Anhang" allein liefert deshalb
+massenhaft PNG-Dateien. Nach der Endung filtern, nicht nach dem Vorhandensein.
+
 ## Wann verwenden
 - Info-Postfach einer Tourismusinformation, DMO oder eines Kulturbetriebs mit vielen ähnlichen Anfragen (Öffnungszeiten, Prospekte, Gruppen, Anreise).
 - Buchungs- und Gruppenanfragen sollen vorsortiert und mit Rückfragen vorbeantwortet werden.

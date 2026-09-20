@@ -9,6 +9,25 @@ Expert guide for writing correct n8n expressions in workflows.
 
 ---
 
+## Multiple expressions in one field: only ONE leading `=`
+
+In n8n, a **single** `=` at the start marks the whole string as an expression.
+Every `{{ ... }}` inside it is then evaluated. Writing `=` again before the second
+placeholder produces **literal text** from there on.
+
+```
+WRONG:   ={{ $fromAI('a') }},={{ $fromAI('b') }},={{ $fromAI('c') }}
+RIGHT:   ={{ $fromAI('a') }},{{ $fromAI('b') }},{{ $fromAI('c') }}
+```
+
+Measured on 19.09.2026 with `microsoftSqlTool` and `queryReplacement`: tools with
+zero or one parameter worked, **everything with two or more silently returned
+nothing** — no error, no empty result, just no data. The symptom points at the
+database; the cause is one character.
+
+The same applies to any field that takes several values: HTTP headers built from
+expressions, comma-separated query replacements, concatenated strings.
+
 ## Expression Format
 
 All dynamic content in n8n uses **double curly braces**:

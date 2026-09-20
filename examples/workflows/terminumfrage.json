@@ -236,23 +236,26 @@
       "parameters": {
         "resource": "email",
         "operation": "send",
-        "fromEmail": "={{ $('Umfrage-Daten (Beispiel)').first().json.absender }}",
-        "toEmail": "={{ $json.an }}",
+        "sender": "={{ $('Umfrage-Daten (Beispiel)').first().json.absender }}",
+        "receipients": "={{ $json.an }}",
         "subject": "={{ $json.betreff }}",
-        "emailFormat": "text",
-        "text": "={{ $json.text }}",
-        "options": {
-          "appendAttribution": false
-        }
+        "sendHTML": false,
+        "textContent": "={{ $json.text }}",
+        "additionalFields": {}
       },
       "id": "7e5a0000-0000-4000-8000-000000000010",
-      "name": "Einladung senden (SMTP)",
-      "type": "n8n-nodes-base.emailSend",
-      "typeVersion": 2.1,
+      "name": "Einladung senden (Brevo)",
+      "type": "n8n-nodes-base.sendInBlue",
+      "typeVersion": 1,
       "position": [
         1340,
         -80
-      ]
+      ],
+      "credentials": {
+        "sendInBlueApi": {
+          "name": "Brevo"
+        }
+      }
     },
     {
       "parameters": {},
@@ -267,8 +270,8 @@
     },
     {
       "parameters": {
-        "content": "**Versand einschalten:** In *Umfrage-Daten (Beispiel)* `mail_versenden` auf true setzen und `absender` anpassen (dort steht noch der Platzhalter `deine-adresse@example.org`). Dann im Knoten *Einladung senden (SMTP)* eine SMTP-Credential wählen.\n\nAuf der gemeinsamen Bootcamp-n8n sehen alle alle Zugangsdaten: nur ein Test-Postfach verwenden, nie dein dienstliches Passwort.\n\nMicrosoft 365 oder Gmail brauchen eigene Zugänge, siehe Skill `m365-google-freigaben`.",
-        "height": 300,
+        "content": "**Versand einschalten:** In *Umfrage-Daten (Beispiel)* `mail_versenden` auf true setzen und `absender` anpassen (dort steht noch der Platzhalter `deine-adresse@example.org`). Im Knoten *Einladung senden (Brevo)* die vorhandene Credential „Brevo“ auswählen: Sie liegt auf der zentralen Bootcamp-n8n bereit. Der Absender muss in Brevo verifiziert sein, die Adresse steht im Zugangsbereich.\n\n⚠️ Nicht den Knoten *Send Email* nehmen: Der spricht SMTP, die Ports sind auf dem Server gesperrt, und er wartet 240 Sekunden bis `Connection timeout`.\n\nAuf der gemeinsamen Bootcamp-n8n sehen alle alle Zugangsdaten: nur ein Test-Postfach verwenden, nie dein dienstliches Passwort.\n\nMicrosoft 365 oder Gmail brauchen eigene Zugänge, siehe Skill `m365-google-freigaben`.",
+        "height": 420,
         "width": 340,
         "color": 6
       },
@@ -759,7 +762,7 @@
       "main": [
         [
           {
-            "node": "Einladung senden (SMTP)",
+            "node": "Einladung senden (Brevo)",
             "type": "main",
             "index": 0
           }

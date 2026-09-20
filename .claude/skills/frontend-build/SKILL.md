@@ -110,11 +110,43 @@ Apps werden über **buildbar** veröffentlicht, nicht über einen anderen Hostin
 - Der **erste Build dauert einige Minuten**; eine Fehlermeldung wie „no available server" in dieser Zeit ist normal.
 - Secrets nur über den `env`-Parameter bzw. `.env.local` (lokal, nicht committet), **nie** ins Repo. Der Supabase-`service_role`-Key gehört nie in ein Frontend.
 
+## Drei Stolpersteine beim ersten Veröffentlichen
+
+Alle am 19./20.09.2026 am echten Dienst gemessen.
+
+**1. Veröffentlicht wird aus `main`.** Der Deploy-Dienst holt sich den Stand von `main`. Was nur
+auf dem Arbeits-Branch der Sitzung liegt, ist nicht dabei; ein Repo, dessen Hauptzweig `master`
+heisst, scheitert ganz (`fatal: Remote branch main not found in upstream origin`).
+
+⚠️ **Der Dienst meldet trotzdem HTTP 200 und gibt eine URL zurück.** Man bekommt also eine
+Adresse, hinter der nichts steht, und sucht den Fehler an der falschen Stelle. Deshalb vor jedem
+Deploy: Pull Request nach `main` erstellen, mergen lassen, **dann** veröffentlichen.
+
+**2. `NEXT_PUBLIC_*` wird zur BAUZEIT eingesetzt.** Die Werte müssen beim Deploy im
+`env`-Parameter mitgegeben werden. Sie später nachzutragen wirkt nicht, es braucht einen neuen
+Build. Symptom: Die Seite lädt, aber jeder Webhook-Aufruf scheitert, weil die Basis-URL leer ist.
+
+**3. Der erste Build dauert rund drei Minuten** (gemessen: etwa 190 Sekunden). Vorher kommt kein
+404, sondern gar keine Verbindung. Nicht zu früh aufgeben und neu deployen. Eine lokale Vorschau
+gibt es im Web nicht: Die veröffentlichte Adresse ist die erste Stelle, an der du die App siehst.
+
 ## Vor dem Veröffentlichen verifizieren (Pflicht)
 
 1. **`npm run build`**: Build muss grün sein (fängt SSR- und Type-Fehler vor dem Veröffentlichen ab).
 2. Nur **Desktop:** `npm run dev` für eine lokale Vorschau. Im **Web** gibt es kein `localhost`; die Vorschau ist die veröffentlichte Adresse.
 3. Erst dann committen, pushen (Web: Pull Request mergen) und veröffentlichen.
+
+## Webhook-Aufruf aus dem Browser: geht, aber mit Nebenwirkung
+
+n8n sendet bei Webhooks CORS-Header und **spiegelt den Origin** (gemessen:
+`OPTIONS` gibt 204, `Access-Control-Allow-Origin` trägt den anfragenden Origin).
+Der direkte `fetch` aus dem Frontend funktioniert also, ohne Proxy.
+
+⚠️ **Es wird JEDER Origin gespiegelt.** Ein Webhook ohne Authentifizierung ist
+damit von jeder beliebigen Website aufrufbar. Für Testdaten im Bootcamp
+vertretbar. Sobald echte Daten daran hängen: Header-Auth am Webhook einschalten,
+oder den Aufruf serverseitig in einen Route Handler legen, damit der Schlüssel
+nicht im Browser steht.
 
 ## Env-Var-Checkliste
 
