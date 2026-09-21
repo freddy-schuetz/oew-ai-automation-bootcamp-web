@@ -1,6 +1,6 @@
 ---
 name: idee-klaeren
-description: Hilft Einsteiger:innen im AI Automation Bootcamp, aus einem eigenen Vorhaben einen klaren, baubaren Auftrag für Claude Code zu machen, egal ob sie noch KEINE Idee haben (Inspiration über die Bootcamp-Themen) ODER eine Idee haben, sie aber nicht als klare Anweisung formulieren können. Klärt dabei auch Freigaben (Microsoft 365/Google), Datenlage und die passende n8n. Verwenden am Tag 1 bzw. ganz am Anfang, wenn jemand unsicher ist, was oder wie gebaut werden soll, das Vorhaben vage beschreibt, oder einen Workflow/eine App planen will, bevor gebaut wird.
+description: Hilft Einsteiger:innen im AI Automation Bootcamp, aus einem eigenen Vorhaben einen klaren, baubaren Auftrag für Claude Code zu machen, egal ob sie noch KEINE Idee haben (Inspiration über die Bootcamp-Themen) ODER eine Idee haben, sie aber nicht als klare Anweisung formulieren können. Klärt dabei auch Freigaben (Microsoft 365/Google), Datenlage, die passende n8n und welche fertigen Bausteine der Bootcamp-n8n passen (Google-Daten, Websites ohne Schnittstelle, Sprache, Mailversand). Verwenden am Tag 1 bzw. ganz am Anfang, wenn jemand unsicher ist, was oder wie gebaut werden soll, das Vorhaben vage beschreibt, oder einen Workflow/eine App planen will, bevor gebaut wird.
 ---
 
 # Vorhaben klären → baubarer Auftrag
@@ -33,6 +33,7 @@ Führe eine **kurze Bestandsaufnahme** im Gespräch durch (nacheinander, locker)
 2. **Alltag:** „Welche Aufgaben machst du oft? Was kostet dich regelmäßig Zeit?"
 3. **Wiederholung:** „Was tippst, kopierst oder beantwortest du immer wieder ähnlich?" (typische Automatisierungs-Kandidaten)
 4. **Werkzeuge und Daten:** „Womit arbeitest du? (Outlook oder Gmail, Teams, Kalender, Excel oder Google Sheets, Website, Buchungssystem, PowerPoint oder Google Slides …) Welche Infos kommen da vor?"
+5. **Infos von außen:** „Gibt es Infos, die du dir heute **von fremden Websites oder aus Google** zusammensuchst? (Öffnungszeiten, Bewertungen, Preise, Veranstaltungen, Angaben von Partnerbetrieben …)" Solche Vorhaben lohnen sich oft besonders, weil die Bootcamp-n8n dafür fertige Bausteine hat (siehe [Was die Bootcamp-n8n mitbringt](#was-die-bootcamp-n8n-mitbringt)).
 
 Daraus leitest du eine **kurze Einschätzung und 2 bis 3 konkrete Vorschläge** ab, möglichst passend zu einem der **sechs Bootcamp-Themen** („Aus dem, was du erzählst, würde sich X besonders lohnen, weil …"), und wählst **gemeinsam einen** aus.
 → Zum Stöbern kannst du jederzeit das **Ideen-Menü** zeigen: [`docs/tourismus-ideen.md`](../../../docs/tourismus-ideen.md).
@@ -49,8 +50,26 @@ Klär nacheinander diese Punkte, in Alltagssprache und mit Beispielen:
 - **Eingaben und Daten:** Welche Infos sind beteiligt? (Name, Datum, Anliegen, Kennzahlen, Notizen …)
 - **Schritte:** Was passiert Schritt für Schritt? (in Alltagssprache; du ordnest es)
 - **Beteiligte Werkzeuge:** Outlook, Teams, Gmail, Google Kalender, Excel, Sheets, Website … (grob)
+- **Daten von außen?** Kommt etwas aus Google-Einträgen, von fremden Websites oder aus Sprache und Audio? Dann den passenden Baustein aus der Übersicht unten vorschlagen.
 - **Ergebnis:** Was kommt am Ende heraus? (ein Antwortentwurf · ein Eintrag in einer Tabelle · ein Bericht per Mail · ein Diagramm · Folien · eine Web-Seite …)
 - **Oberfläche nötig?** Braucht es eine **Seite oder ein Formular für Menschen** (→ zusätzlich ein Frontend) oder läuft alles **im Hintergrund** (→ nur n8n)?
+
+#### Was die Bootcamp-n8n mitbringt
+Auf der zentralen Bootcamp-n8n liegen fertige Zugänge. **Denk sie beim Planen mit und schlag sie aktiv vor, wenn das Vorhaben sie braucht**, dräng sie aber niemandem auf. Sag es in Alltagssprache („Dafür gibt es im Bootcamp schon einen fertigen Zugang, der Google-Einträge ausliest").
+
+| Wenn das Vorhaben … | gibt es dafür | Achtung |
+|---|---|---|
+| Texte verstehen, sortieren, zusammenfassen oder Entwürfe schreiben soll | **Anthropic** (KI) | Normalfall für alles mit KI |
+| Angaben zu **bekannten Betrieben aus Google** braucht (Öffnungszeiten, Adresse, Telefon, Bewertungen) | **DataForSEO** | kostet je Abfrage Geld |
+| Daten von **Websites ohne Schnittstelle** braucht (TripAdvisor, Booking.com, beliebige Seiten als Text) oder **Betriebe nach Kategorie und Ort sucht** (Google Maps) | **Apify** | kostet je Lauf Geld, kleines gemeinsames Budget |
+| aus **Sprache Text** machen soll (Besprechung, Sprachnachricht) oder umgekehrt | **OpenAI** | Aufnahmen sind personenbezogen |
+| in **eigenen Dokumenten suchen** soll (Wissensbasis) | **OpenAI** + **Supabase** | fertiges Beispiel im Repo |
+| **Mails verschicken** soll | **Brevo** | Absender aus dem Zugangsbereich |
+| **offene Daten** abruft (Wetter, Feiertage, Statistik) | nichts nötig, geht direkt | |
+| eine Tabelle braucht | **Data Tables** in n8n; **NocoDB**, wenn Menschen die Tabelle im Browser pflegen sollen | |
+
+- Bei den zwei Datendiensten, die je Abfrage abrechnen (DataForSEO, Apify), und bei großen Mengen für die KI (viele Stunden Audio, Tausende Dokumente) im Steckbrief grob festhalten, **wie oft und für wie viele Einträge** der Ablauf läuft. Einmal am Tag für 20 Betriebe ist etwas anderes als stündlich für 2.000.
+- Wie man die Bausteine anschließt, steht in `CLAUDE.md`. Fehlt dort der Abschnitt zu Apify, steht er in https://buildbar.at/oew/claude.md.
 
 ### 3. Bootcamp-Rahmen klären (immer, kurz)
 Diese drei Punkte entscheiden, ob das Vorhaben im Bootcamp **wirklich läuft**. Frag sie nacheinander:
@@ -87,6 +106,7 @@ Fasse alles in einem **Steckbrief** zusammen und zeige zusätzlich ein **Mermaid
 2. <Schritt>
 3. <Schritt>
 **Beteiligte Werkzeuge:** <Outlook, Sheets, …>
+**Bootcamp-Bausteine:** <z. B. DataForSEO für die Google-Einträge, Brevo für den Versand, oder „keine“>
 **Ergebnis:** <was kommt heraus>
 **Oberfläche nötig?:** <ja (Frontend) / nein (nur n8n)>
 
@@ -94,6 +114,7 @@ Fasse alles in einem **Steckbrief** zusammen und zeige zusätzlich ein **Mermaid
 **Freigaben:** <keine nötig / nötig für …, Admin: …, Stand: …>
 **Daten:** <echte Daten / Beispieldaten, personenbezogen ja/nein>
 **n8n:** <zentrale Bootcamp-n8n / eigene n8n>
+**Kosten:** <bei DataForSEO, Apify oder großen KI-Mengen: wie oft, wie viele Einträge, grob in USD; sonst „keine“>
 **Erster Schritt bis Tag 4:** <was im Bootcamp wirklich fertig wird>
 **Nächster Schritt danach:** <z. B. Freigabe beantragen, echte Daten anbinden>
 
