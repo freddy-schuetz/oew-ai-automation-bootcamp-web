@@ -27,3 +27,7 @@ backup/
 # OS
 .DS_Store
 Thumbs.db
+
+# TypeScript: inkrementelle Build-Info nie mitliefern.
+# Nixpacks haengt sonst einen Cache-Ordner auf diese Datei, der Build bricht ab.
+*.tsbuildinfo
